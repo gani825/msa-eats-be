@@ -1,14 +1,24 @@
-// Parent의 subprojects에서 이미 플러그인을 apply 했으므로
-// 자식에서는 plugins 블록을 비우거나 생략해도 된다.
-
 dependencies {
-    compileOnly 'io.jsonwebtoken:jjwt-api:0.13.0'
-    compileOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
-    compileOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
-    compileOnly 'org.springframework.boot:spring-boot-starter-security'
-    compileOnly 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // common 모듈 가져오되 JPA는 제외
+    // gateway는 DB 직접 접근 안 하므로 JPA 불필요
+    implementation(project(':common')) {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-data-jpa'
+    }
+
+    // JWT 토큰 검증용 (게이트웨이에서 토큰 유효성 먼저 확인)
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.13.0'
+
+    // API 게이트웨이 (라우팅, 필터 기능 제공)
+    implementation 'org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc'
 }
 
-// 라이브러리이므로 실행 파일(jar) 생성 방식을 변경
-bootJar { enabled = false } // 실행 가능한 jar를 만들지 않음 (메인 메소드가 없으므로)
-jar { enabled = true } // 다른 모듈에서 부품으로 쓸 수 있는 일반 jar만 생성
+// 서비스 모듈은 실행 가능한 jar 파일로 빌드되어야 한다.
+bootJar {
+    enabled = true
+}
+
+jar {
+    enabled = false // 실행 jar가 우선이므로 일반 jar는 끈다.
+}
