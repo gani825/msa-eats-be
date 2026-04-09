@@ -9,17 +9,20 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 
-// 각 서비스에 로그인정보를 전달하는 역할
-
+// 각 서비스에 로그인 정보를 전달하는 역할
+// Gateway가 JWT 검증 후 X-User-Id, X-User-Name 헤더에 담아 전달 → 여기서 꺼내 저장
 @Component
 public class UserContextInterceptor implements HandlerInterceptor {
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // Gateway에서 넘겨준 헤더 값 꺼내기
         String userId = request.getHeader("X-User-Id");
         String userName = request.getHeader("X-User-Name");
 
         if (userId != null && userName != null) {
             try {
+                // 이름에 한글이 있을 경우 URL 인코딩되어 있으므로 디코딩
                 String decodedUserName = URLDecoder.decode(userName, StandardCharsets.UTF_8);
                 UserContext.set(new UserDto(Long.parseLong(userId), decodedUserName));
             } catch (Exception e) {
@@ -27,11 +30,12 @@ public class UserContextInterceptor implements HandlerInterceptor {
                 UserContext.set(new UserDto(Long.parseLong(userId), userName));
             }
         }
-        return true;
+        return true; // true = 다음 로직(Controller) 진행
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
-        UserContext.clear(); // 메모리 누수 방지를 위해 반드시 삭제
+        // 요청 처리 완료 후 반드시 삭제 → 메모리 누수 방지
+        UserContext.clear();
     }
 }

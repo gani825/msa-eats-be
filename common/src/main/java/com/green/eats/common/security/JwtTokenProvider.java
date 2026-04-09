@@ -14,66 +14,65 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 
 @Slf4j
-@Component //역할이 없는 빈등록
+@Component
 public class JwtTokenProvider {
-    private final ObjectMapper objectMapper; //(내장)Jackson 라이브러리 DI받을 속성
+    private final ObjectMapper objectMapper; // (내장)Jackson 라이브러리 DI받을 속성
     private final ConstJwt constJwt;
-    private final SecretKey secretKey;
+    private final SecretKey secretKey; // 서명에 사용할 키 (yaml의 secretKey를 디코딩해 생성)
 
     public JwtTokenProvider(ObjectMapper objectMapper, ConstJwt constJwt) {
         this.objectMapper = objectMapper;
         this.constJwt = constJwt;
+        // BASE64로 인코딩된 secretKey를 디코딩해서 실제 암호화 키로 변환
         this.secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(constJwt.secretKey()));
-
         log.info("constJwt: {}", this.constJwt);
     }
 
     public String generateAccessToken(JwtUser jwtUser) {
-        return generateToken( jwtUser, constJwt.accessTokenValidityMilliseconds() );
+        return generateToken(jwtUser, constJwt.accessTokenValidityMilliseconds());
     }
 
     public String generateRefreshToken(JwtUser jwtUser) {
-        return generateToken( jwtUser, constJwt.refreshTokenValidityMilliseconds() );
+        return generateToken(jwtUser, constJwt.refreshTokenValidityMilliseconds());
     }
 
-    //JWT(문자열)을 만드는 메소드, 암호화된 문자열(데이터, 토큰만료시간)
+    // JWT(문자열)을 만드는 메소드, 암호화된 문자열(데이터, 토큰만료시간)
     public String generateToken(JwtUser jwtUser, long tokenValidityMilliSeconds) {
-        Date now = new Date(); // import java.util.Date;
+        Date now = new Date(); // 현재 시각
         return Jwts.builder()
-                //header
-                .header().type(constJwt.bearerFormat()) //JWT
+                // header
+                .header().type(constJwt.bearerFormat()) // JWT
                 .and()
-                //payload
-                .issuer( constJwt.issuer() )
-                .issuedAt( now )  //JWT만든 일시 (토큰 생성일시)
-                .expiration( new Date(now.getTime() + tokenValidityMilliSeconds) ) //JWT종료 일시 (토큰 만료일시)
-                .claim( constJwt.claimKey(), makeClaimByUserToJson(jwtUser) ) //signedUser 키값으로 JwtUser객체를 JSON으로 변환하여 담았다.
-
-                .signWith(secretKey) //signature
+                // payload
+                .issuer(constJwt.issuer()) // 발행자
+                .issuedAt(now) // 토큰 생성 일시
+                .expiration(new Date(now.getTime() + tokenValidityMilliSeconds)) // 만료 일시
+                .claim(constJwt.claimKey(), makeClaimByUserToJson(jwtUser))  // JwtUser 객체를 JSON으로 변환해 담기
+                // signature (비밀키로 서명)
+                .signWith(secretKey)
                 .compact();
     }
 
-    public String makeClaimByUserToJson(JwtUser jwtUser) { //직렬화 (Serialization)
-        return objectMapper.writeValueAsString(jwtUser);  //객체 > JSON문자열로 변환
+    // 직렬화 : JwtUser 객체 → JSON 문자열
+    public String makeClaimByUserToJson(JwtUser jwtUser) {
+        return objectMapper.writeValueAsString(jwtUser);
     }
 
+    // JWT에서 JwtUser 꺼내기
     public JwtUser getJwtUserFromToken(String token) {
         Claims claims = getClaims(token);
-
-        //signedUser 키값으로 담겨져있는 value를 String타입으로 리턴해 줘~
+        // signedUser 키값으로 담겨있는 JSON 문자열을 꺼내서
         String json = claims.get(constJwt.claimKey(), String.class);
-
-        //JSON > Object, json문자열을 JwtUser 객체로 변환
+        // JSON 문자열 → JwtUser 객체로 역직렬화
         return objectMapper.readValue(json, JwtUser.class);
     }
 
-    //JWT의 payload에 담겨져있는 Claim들을 리턴한다.
+    // JWT의 payload에 담겨있는 Claim들을 리턴한다.
     private Claims getClaims(String token) {
         return Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-
+                .verifyWith(secretKey) // 서명 검증
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
