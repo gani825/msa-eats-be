@@ -6,11 +6,10 @@ import lombok.Data;
 
 @Data
 public class UserSinginReq {
-    @Email
+    @Email // 이메일 형식 검증
     @NotBlank
     private String email;
 
     @NotBlank
     private String password;
-
 }
