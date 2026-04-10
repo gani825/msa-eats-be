@@ -40,7 +40,7 @@ public class UserController {
         User signedUser = userService.signin(req);
 
         // 인증쿠키: AT + RT 발급
-        JwtUser jwtUser = new JwtUser(signedUser.getId());
+        JwtUser jwtUser = new JwtUser(signedUser.getId(), signedUser.getName());
         jwtTokenManager.issue(res, jwtUser); // 쿠키에 AT, RT 담기
 
         // 응답 DTO 빌드

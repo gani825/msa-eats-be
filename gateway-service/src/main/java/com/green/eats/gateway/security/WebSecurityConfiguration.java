@@ -1,11 +1,9 @@
-package com.green.eats.gateway.securtiy;
+package com.green.eats.gateway.security;
 
 import com.green.eats.gateway.filter.TokenAuthenticationFilter;
-import com.green.eats.gateway.securtiy.JwtAuthenticationEntryPoint;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.config.Customizer;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,40 +19,44 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WebSecurityConfiguration {
     private final TokenAuthenticationFilter tokenAuthenticationFilter;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint; // 인증 실패 시 401 응답 처리
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        return httpSecurity.sessionManagement( session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) ) //시큐리티에서 session사용 않겠다.
-                .httpBasic( hb -> hb.disable() )  //시큐리티에서 제공해주는 로그인 화면이 있는데 사용하지 않겠다
-                .formLogin( fl -> fl.disable() ) //어차피 BE가 화면을 만들지 않기 때문에 formLogin기능도 비활성화하겠다.
-                .logout( logout -> logout.disable() )
-                .csrf( csrf -> csrf.disable() ) //어차피 BE가 화면을 만들지 않으면 csrf 공격이 의미가 없기 때문에 비활성화하겠다.
+        return httpSecurity
+                // JWT 방식은 세션을 안 쓰기 때문에 STATELESS로 설정
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .httpBasic(hb -> hb.disable()) // 브라우저 기본 로그인 팝업 비활성화
+                .formLogin(fl -> fl.disable()) // 시큐리티 기본 로그인 폼 비활성화
+                .logout(logout -> logout.disable())
+                // JWT 방식은 쿠키 세션을 안 써서 CSRF 공격이 성립하지 않으므로 비활성화
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                //인가처리 (권한처리)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/user/signup", "/api/user/signin", "/api/store/**", "/api/order/**", "/actuator/**").permitAll()
-                        .anyRequest().authenticated()
+                        // /api/order/** 는 로그인한 사용자만 접근 가능
+                        .requestMatchers("/api/order/**").authenticated()
+                        // 나머지 모든 요청은 인증 없이 허용
+                        .anyRequest().permitAll()
                 )
-
-                //아래 내용은 (POST) /api/board 로 요청이 올 때는 반드시 로그인이 되어있어야 한다.
+                // 인증 실패 시 (401) 처리 → JwtAuthenticationEntryPoint 에서 응답
                 .exceptionHandling(e -> e.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+                // UsernamePasswordAuthenticationFilter 앞에 JWT 필터 삽입
+                // 즉 요청이 들어오면 JWT 검증을 먼저 하고 그 다음 시큐리티 필터 체인이 실행됨
                 .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
-    // 3. CORS 상세 설정 Bean
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+        config.setAllowedHeaders(List.of("*")); // 모든 헤더 허용
+        config.setAllowCredentials(true); // 쿠키 포함 요청 허용
+        config.setMaxAge(3600L); // preflight 요청 결과를 1시간 캐싱
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+        source.registerCorsConfiguration("/**", config); // 모든 경로에 CORS 설정 적용
         return source;
     }
 }

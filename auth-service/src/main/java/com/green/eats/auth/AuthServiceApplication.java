@@ -2,8 +2,10 @@ package com.green.eats.auth;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
+@ConfigurationPropertiesScan("com.green.eats.auth")
 @EnableJpaAuditing
 @SpringBootApplication
 public class AuthServiceApplication {

@@ -51,10 +51,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                 // 시큐리티 컨텍스트에 인증 정보 등록 → 인증 완료 처리
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
+                // 인증 정보가 있는 경우 헤더를 축다하기 위해 요청을 감싼다.
                 if (authentication.getPrincipal() instanceof UserPrincipal userPrincipal) {
-
                     JwtUser jwtUser = userPrincipal.getJwtUser();
-
+                    log.info("============= jwtUser: {}", jwtUser);
                     // 한글 이름은 HTTP 헤더에 담을 수 없으므로 URL 인코딩
                     String encodedUserName = URLEncoder.encode(jwtUser.getName(), StandardCharsets.UTF_8);
 
