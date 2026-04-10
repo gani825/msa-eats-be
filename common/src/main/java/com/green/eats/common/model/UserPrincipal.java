@@ -1,5 +1,6 @@
 package com.green.eats.common.model;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
@@ -11,6 +12,7 @@ import java.util.List;
 // Spring Security가 인증 처리를 할 때 사용하는 객체
 // SecurityContextHolder에 이 객체가 담기면 인증됨 상태가 된다
 @RequiredArgsConstructor
+@Getter
 public class UserPrincipal implements UserDetails {
     private final JwtUser jwtUser; // JWT에서 꺼낸 유저 정보
 

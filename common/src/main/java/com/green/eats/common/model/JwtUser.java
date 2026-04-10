@@ -9,4 +9,5 @@ import lombok.Getter;
 @AllArgsConstructor
 public class JwtUser {
     private long signedUserId; // 로그인한 유저의 PK
+    private String name;
 }
