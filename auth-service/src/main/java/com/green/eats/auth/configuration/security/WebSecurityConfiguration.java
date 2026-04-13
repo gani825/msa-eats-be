@@ -1,4 +1,4 @@
-package com.green.eats.auth.application.configuration.security;
+package com.green.eats.auth.configuration.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

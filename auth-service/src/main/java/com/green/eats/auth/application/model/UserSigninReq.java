@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
-public class UserSinginReq {
+public class UserSigninReq {
     @Email // 이메일 형식 검증
     @NotBlank
     private String email;
