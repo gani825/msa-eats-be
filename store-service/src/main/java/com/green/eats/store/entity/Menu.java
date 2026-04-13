@@ -1,5 +1,7 @@
 package com.green.eats.store.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.green.eats.store.enumcode.EnumMenuCategory;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,6 +26,11 @@ public class Menu {
 
     @Column(nullable = false)
     private Integer stockQuantity; // 재고 수량
+
+    // DB 컬럼명: cd_category, DB에는 코드("01")로 저장
+    @Column(nullable = false, name = "cd_category")
+    @JsonProperty("menuCategory")
+    private EnumMenuCategory enumMenuCategory;
 
     // 주문 시 재고 차감 메서드
     // 재고가 부족하면 RuntimeException 발생
