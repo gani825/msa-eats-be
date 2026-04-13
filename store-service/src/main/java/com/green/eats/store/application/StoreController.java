@@ -4,11 +4,9 @@ import com.green.eats.common.auth.UserContext;
 import com.green.eats.common.model.ResultResponse;
 import com.green.eats.common.model.UserDto;
 import com.green.eats.store.application.model.MenuGetRes;
-import com.green.eats.store.entity.Menu;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -21,13 +19,14 @@ public class StoreController {
 
     @GetMapping("/menu")
     public ResultResponse<?> getAllMenus() {
+        // Gateway가 헤더로 넘긴 유저 정보
         UserDto userDto = UserContext.get();
         log.info("userDto: {}", userDto);
 
         List<MenuGetRes> menus = storeService.getAllMenus();
         return ResultResponse.builder()
-                .resultMessage( String.format("%d rows", menus.size()) )
-                .resultData( menus )
+                .resultMessage(String.format("%d rows", menus.size()))
+                .resultData(menus)
                 .build();
     }
 }

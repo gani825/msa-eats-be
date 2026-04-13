@@ -13,6 +13,7 @@ public class MenuGetRes {
     private Integer stockQuantity;
     private EnumMenuCategory menuCategory;
 
+    // Entity → DTO 변환
     public MenuGetRes(Menu menu) {
         this.id = menu.getId();
         this.name = menu.getName();
