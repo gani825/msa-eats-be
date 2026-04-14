@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
@@ -21,9 +22,11 @@ public class UserPrincipal implements UserDetails {
         return jwtUser.getSignedUserId();
     }
 
+    // 인가 체크 - JWT에 담긴 role로 ROLE_USER, ROLE_ADMIN, ROLE_MANAGER 권한 반환
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(); // 권한 없음 (추후 필요 시 역할 추가)
+        String roleName = String.format("ROLE_%s", jwtUser.getEnumUserRole().name());
+        return List.of(new SimpleGrantedAuthority(roleName));
     }
 
     @Override
