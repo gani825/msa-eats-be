@@ -12,4 +12,5 @@ import lombok.ToString;
 public class JwtUser {
     private long signedUserId; // 로그인한 유저의 PK
     private String name;
+    private EnumUserRole enumUserRole; // 인가 체크에 사용
 }
