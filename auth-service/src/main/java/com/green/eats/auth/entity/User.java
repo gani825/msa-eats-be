@@ -1,6 +1,7 @@
 package com.green.eats.auth.entity;
 
 import com.green.eats.common.entity.CreatedUpdatedAt;
+import com.green.eats.common.model.EnumUserRole;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,4 +30,9 @@ public class User extends CreatedUpdatedAt { // created_at, updated_at 자동 �
     private String name;
 
     private String address; // 주소는 선택값 (NULL 허용)
+
+
+    // DB에 코드값("01", "02", "03")으로 저장, EnumUserRole.CodeConverter가 자동 변환
+    @Column(nullable = false, length = 2)
+    private EnumUserRole enumUserRole;
 }
