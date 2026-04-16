@@ -1,5 +1,6 @@
 package com.green.eats.auth.application.model;
 
+import com.green.eats.common.model.EnumUserRole;
 import lombok.Data;
 
 // 회원가입 요청 시 프론트에서 받는 데이터
@@ -9,4 +10,5 @@ public class UserSignupReq {
     private String password;
     private String name;
     private String address; // 선택값
+    private EnumUserRole userRole; // 회원가입 시 역할 입력
 }
