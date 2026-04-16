@@ -1,6 +1,7 @@
 package com.green.eats.auth.application;
 
 import com.green.eats.auth.application.model.UserSigninRes;
+import com.green.eats.auth.application.model.UserSigninReq;
 import com.green.eats.auth.application.model.UserSignupReq;
 import com.green.eats.auth.entity.User;
 import com.green.eats.common.model.JwtUser;
@@ -33,7 +34,7 @@ public class UserController {
     }
 
     @PostMapping("/signin")
-    public ResultResponse<?> signin(HttpServletResponse res, @RequestBody UserSignupReq req) {
+    public ResultResponse<?> signin(HttpServletResponse res, @RequestBody UserSigninReq req) {
         log.info("req: {}", req);
 
         // 이메일/비밀번호 검증 → 유저 조회
