@@ -16,7 +16,6 @@ public class EnumMapperScanner {
 
     public static Map<String, List<EnumMapperValue>> scan(String basePackage) {
         Map<String, List<EnumMapperValue>> factory = new LinkedHashMap<>();
-
         // EnumMapperType 구현체만 필터링하는 클래스패스 스캐너 생성
         ClassPathScanningCandidateComponentProvider scanner =
                 new ClassPathScanningCandidateComponentProvider(false);
