@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserEventConsumer {
     private final UserCacheRepository userCacheRepository;
 
+    // user-topic을 구독, order-group 기준으로 offset 관리
     @Transactional
     @KafkaListener(topics = "user-topic", groupId = "order-group")
     public void consume(UserEvent event) {
@@ -25,7 +26,7 @@ public class UserEventConsumer {
             UserEventType type = event.getEventType();
 
             if (type == UserEventType.CREATE || type == UserEventType.UPDATE) {
-                // 저장 또는 수정 (Idempotent: 동일 ID면 덮어쓰기 됨)
+                // 동일 userId면 덮어쓰기 (Idempotent 처리)
                 UserCache userCache = UserCache.builder()
                         .userId(event.getUserId())
                         .name(event.getName())
@@ -34,14 +35,14 @@ public class UserEventConsumer {
                 log.info("✅ UserCache 저장/업데이트 완료: {}", event.getUserId());
 
             } else if ("DELETE".equals(type)) {
-                // 회원 탈퇴 처리
+                // 회원 탈퇴 시 캐시 삭제
                 userCacheRepository.deleteById(event.getUserId());
                 log.info("🗑️ UserCache 삭제 완료: {}", event.getUserId());
             }
 
         } catch (Exception e) {
+            // 예외를 잡지 않으면 Kafka가 메시지를 무한 재처리할 수 있으므로 반드시 catch
             log.error("❌ Kafka 메시지 처리 중 오류 발생: ", e);
-            // 여기서 발생한 예외를 처리하지 않으면 메시지가 무한 재처리에 빠질 수 있으므로 주의!
         }
     }
 }
