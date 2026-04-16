@@ -19,6 +19,7 @@ public class OrderController {
     @PostMapping
     public ResultResponse<?> placeOrder(@RequestBody OrderPostReq req) {
         log.info("orderPostReq: {}", req);
+        // Gateway가 헤더로 넘긴 유저 정보 꺼내기
         UserDto userDto = UserContext.get();
         Long orderId = orderService.postOrder(userDto.id(), req);
         return ResultResponse.builder()
