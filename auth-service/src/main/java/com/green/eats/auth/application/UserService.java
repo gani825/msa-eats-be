@@ -5,6 +5,7 @@ import com.green.eats.auth.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -15,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     public void signup(UserSignupReq req) {
         // 회원가입 시켜주세요.
@@ -25,7 +27,28 @@ public class UserService {
         newUser.setAddress(req.getAddress());
 
         userRepository.save(newUser); // INSERT 쿼리 실행
+
+        UserEvent userEvent = UserEvent.builder()
+                .userId( newUser.getId() )
+                .name( newUser.getName() )
+                .eventType( UserEventType.CREATE )
+                .build();
+
+        kafkaTemplate.send("user-topic", String.valueOf(newUser.getId()), userEvent)
+                .whenComplete((result, ex) -> {
+                    if (ex == null) {
+                        // 성공 시 로그
+                        log.info("✅ [Kafka Success] Topic: {}, Offset: {}",
+                                result.getRecordMetadata().topic(),
+                                result.getRecordMetadata().offset());
+                    } else {
+                        // 실패 시 로그
+                        log.error("❌ [Kafka Failure] 원인: {}", ex.getMessage());
+                    }
+                });
     }
+
+}
 
     // 기존에서 추가된 부분
 
