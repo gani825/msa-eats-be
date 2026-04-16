@@ -1,7 +1,10 @@
 package com.green.eats.auth.application;
 
+import com.green.eats.auth.application.model.UserSigninReq;
 import com.green.eats.auth.application.model.UserSignupReq;
 import com.green.eats.auth.entity.User;
+import com.green.eats.common.constants.UserEventType;
+import com.green.eats.common.model.UserEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,18 +19,23 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate; // Kafka 메시지 전송 템플릿
 
     public void signup(UserSignupReq req) {
-        // 회원가입 시켜주세요.
+        // 비밀번호 BCrypt 암호화
+        String hashedPassword = passwordEncoder.encode(req.getPassword());
+
+        // 회원가입 유저 객체 생성 후 저장
         User newUser = new User();
-        newUser.setEmail(req.getEmail());
-        newUser.setPassword(req.getPassword());
-        newUser.setName(req.getName());
-        newUser.setAddress(req.getAddress());
+        newUser.setEmail( req.getEmail() );
+        newUser.setPassword( hashedPassword );
+        newUser.setName( req.getName() );
+        newUser.setAddress( req.getAddress() );
+        newUser.setEnumUserRole( req.getUserRole() ); // 역할 설정
 
-        userRepository.save(newUser); // INSERT 쿼리 실행
+        userRepository.save(newUser);
 
+        // 회원가입 이벤트 생성 후 Kafka에 전송
         UserEvent userEvent = UserEvent.builder()
                 .userId( newUser.getId() )
                 .name( newUser.getName() )
@@ -48,18 +56,14 @@ public class UserService {
                 });
     }
 
-}
-
-    // 기존에서 추가된 부분
-
-    public User signin(UserSignupReq req) {
+    public User signin(UserSigninReq req) {
         // 이메일로 유저 조회
-        User signedUser = userRepository.findByEmail(req.getEmail());
+        User signedUser = userRepository.findByEmail( req.getEmail() );
         log.info("signedUser: {}", signedUser);
 
         // 유저가 없거나 비밀번호 불일치 시 예외
         // passwordEncoder.matches(평문, 암호화된값) → 일치 여부 확인
-        if (signedUser == null || !passwordEncoder.matches(req.getPassword(), signedUser.getPassword())) {
+        if(signedUser == null || !passwordEncoder.matches( req.getPassword(), signedUser.getPassword() )) {
             notFoundUser();
         }
         return signedUser;
@@ -67,6 +71,6 @@ public class UserService {
 
     // 예외를 별도 메서드로 분리 → 가독성 향상
     private void notFoundUser() {
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디, 비밀번호를 확인해주세요.");
+        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "아이디, 비밀번호를 확인해 주세요.");
     }
 }
