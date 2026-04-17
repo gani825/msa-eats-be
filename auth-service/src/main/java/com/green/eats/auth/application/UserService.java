@@ -68,6 +68,19 @@ public class UserService {
         sendKafkaEvent(user.getId(), user.getName(), UserEventType.UPDATE);
     }
 
+    @Transactional
+    public void delete(Long userId) {
+        // userId로 유저 조회 (없으면 예외)
+        User user = userRepository.findById(userId).orElseThrow();
+
+        // 변경된 값 세팅
+        user.setIsDel(true);
+        userRepository.save(user);
+
+        // 삭제 이벤트 Kafka에 전송
+        sendKafkaEvent(user.getId(), user.getName(), UserEventType.DELETE);
+    }
+
     // Kafka 이벤트 전송 공통 메서드
     private void sendKafkaEvent(Long userId, String name, UserEventType eventType) {
         UserEvent userEvent = UserEvent.builder()
