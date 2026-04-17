@@ -60,8 +60,20 @@ public class UserController {
         // signin() 때 issue()로 담아둔 AT 쿠키에서 유저 정보 꺼내기
         UserDto userDto = UserContext.get();
         userService.update(userDto.id(), req);
+
         return ResultResponse.builder()
                 .resultMessage("수정 완료")
+                .resultData(1)
+                .build();
+    }
+
+    @DeleteMapping
+    public ResultResponse<?> delete() {
+        UserDto userDto = UserContext.get();
+        userService.delete(userDto.id());
+
+        return ResultResponse.builder()
+                .resultMessage("삭제 완료")
                 .resultData(1)
                 .build();
     }
