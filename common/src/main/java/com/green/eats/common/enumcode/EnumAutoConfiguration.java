@@ -1,11 +1,14 @@
 package com.green.eats.common.enumcode;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,28 +22,41 @@ import java.util.Map;
 
  @ComponentScan: common 패키지의 CommonController도 빈 등록 대상에 포함
  */
+@Slf4j
 @Configuration
-@ComponentScan(basePackages = "com.green.eats.common")
+@ComponentScan(basePackages = "com.green.eats.common") // CommonController 스캔용
 public class EnumAutoConfiguration {
 
     @Bean
-    public EnumMapper enumMapper(ApplicationContext applicationContext) {
+    public EnumMapper enumMapper(ApplicationContext applicationContext,
+                                 @Value("${constants.enum.scan-package:null}") String scanPackage) { // yaml에 추가 패키지 설정 가능
         EnumMapper enumMapper = new EnumMapper();
+        log.info("scanPackage: {}", scanPackage);
 
-        // 메인 앱 패키지 경로 추출 → 해당 패키지 하위 Enum 자동 스캔
-        String basePackage = getBasePackage(applicationContext);
-        Map<String, List<EnumMapperValue>> scannedCodes = EnumMapperScanner.scan(basePackage);
+        // 1. 스캔할 패키지 리스트 준비
+        List<String> scanPackages = new ArrayList<>();
 
-        // 스캔된 Enum을 EnumMapper에 등록
-        scannedCodes.forEach((key, values) -> enumMapper.put(key, values));
+        // 메인 앱(@SpringBootApplication)의 패키지를 기준으로 스캔
+        scanPackages.add(getBasePackage(applicationContext));
+
+        // yaml에 constants.enum.scan-package가 설정되어 있으면 추가 스캔
+        if (scanPackage != null) {
+            scanPackages.add(scanPackage);
+        }
+
+        // 2. 각 패키지를 순회하며 EnumMapperType 구현 Enum 자동 탐색
+        for (String basePackage : scanPackages) {
+            Map<String, List<EnumMapperValue>> scannedCodes = EnumMapperScanner.scan(basePackage);
+
+            // 3. 스캔된 Enum을 EnumMapper에 등록
+            scannedCodes.forEach((key, values) -> enumMapper.put(key, values));
+        }
 
         return enumMapper;
     }
 
-    /*
-     @SpringBootApplication이 붙은 메인 클래스의 패키지명 반환
-    예: com.green.eats.store
-     */
+    // @SpringBootApplication이 붙은 메인 클래스의 패키지명 반환
+    // 예: com.green.eats.store
     private String getBasePackage(ApplicationContext context) {
         return context.getBeansWithAnnotation(SpringBootApplication.class)
                 .values().iterator().next().getClass().getPackageName();
