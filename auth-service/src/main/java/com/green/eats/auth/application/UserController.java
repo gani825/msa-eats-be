@@ -55,6 +55,15 @@ public class UserController {
                 .build();
     }
 
+    @PostMapping("/signout")
+    public ResultResponse<?> signout(HttpServletResponse res) {
+        // AT + RT 쿠키 삭제
+        jwtTokenManager.signOut(res);
+        return ResultResponse.builder()
+                .resultMessage("로그아웃 성공")
+                .build();
+    }
+
     @PutMapping
     public ResultResponse<?> update(@RequestBody UserPutSigninReq req) {
         // signin() 때 issue()로 담아둔 AT 쿠키에서 유저 정보 꺼내기
