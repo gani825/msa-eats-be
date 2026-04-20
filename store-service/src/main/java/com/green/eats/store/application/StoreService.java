@@ -3,6 +3,7 @@ package com.green.eats.store.application;
 import com.green.eats.store.application.model.MenuGetRes;
 import com.green.eats.store.application.model.MenuPostReq;
 import com.green.eats.store.entity.Menu;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,5 +38,16 @@ public class StoreService {
                 .map(MenuGetRes::new).toList();
 
         return resList;
+    }
+
+    @Transactional
+    public void decreaseStock(Long menuId, int quantity) {
+        // 메뉴 조회 (없으면 예외)
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("메뉴를 찾을 수 없습니다."));
+
+        // 재고 차감 (Menu 엔티티의 removeStock 메서드 활용)
+        menu.removeStock(quantity);
+        menuRepository.save(menu);
     }
 }
