@@ -1,17 +1,20 @@
 package com.green.eats.store.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.green.eats.store.application.model.MenuPostReq;
 import com.green.eats.store.enumcode.EnumMenuCategory;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity // DB 테이블과 매핑되는 JPA 엔티티
 @Getter
 @Setter
+@NoArgsConstructor // JPA 필수 - 기본 생성자 자동 생성
 public class Menu {
 
     @Id
@@ -27,10 +30,18 @@ public class Menu {
     @Column(nullable = false)
     private Integer stockQuantity; // 재고 수량
 
-    // DB 컬럼명: cd_category, DB에는 코드("01")로 저장
+    // DB 컬럼명: cd_category, DB에는 코드값으로 저장
     @Column(nullable = false, name = "cd_category")
     @JsonProperty("menuCategory")
     private EnumMenuCategory enumMenuCategory;
+
+    // MenuPostReq를 받아서 Menu 엔티티 생성하는 생성자
+    public Menu(MenuPostReq req) {
+        this.name = req.getName();
+        this.price = req.getPrice();
+        this.stockQuantity = req.getStockQuantity();
+        this.enumMenuCategory = req.getMenuCategory(); // 필드명 수정
+    }
 
     // 주문 시 재고 차감 메서드
     // 재고가 부족하면 RuntimeException 발생
