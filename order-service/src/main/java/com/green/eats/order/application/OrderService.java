@@ -1,6 +1,7 @@
 package com.green.eats.order.application;
 
 import com.green.eats.order.application.model.OrderPostReq;
+import com.green.eats.order.client.StoreClient;
 import com.green.eats.order.entity.Order;
 import com.green.eats.order.entity.OrderItem;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserCacheRepository userCacheRepository;
+    private final StoreClient storeClient; // 재고 차감용 FeignClient
 
     @Transactional
     public Long postOrder(Long userId, OrderPostReq req) {
@@ -32,7 +34,8 @@ public class OrderService {
                 .totalAmount( totalAmount )
                 .build();
 
-        // 2. 상세 항목(List) 순회하며 추가
+
+        // 2. 상세 항목 순회하며 추가 + 재고 차감
         req.getItems().forEach(itemReq -> {
             OrderItem item = OrderItem.builder()
                     .menuId(itemReq.getMenuId())
@@ -40,10 +43,14 @@ public class OrderService {
                     .price(itemReq.getPrice())
                     .build();
 
-            // 연관 관계 편의 메서드 활용 - order 세팅 + 리스트 추가 한 번에 처리
             order.addOrderItem(item);
+
+            // store-service에 재고 차감 요청 (FeignClient)
+            storeClient.decreaseStock(itemReq.getMenuId(), itemReq.getQuantity());
         });
 
         return orderRepository.save(order).getId();
     }
+
+
 }
