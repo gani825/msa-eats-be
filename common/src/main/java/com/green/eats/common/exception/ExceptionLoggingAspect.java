@@ -16,8 +16,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ExceptionLoggingAspect {
 
-    // 포인트컷: com.green.eats 하위 모든 클래스의 모든 메서드에 적용
-    @AfterThrowing(pointcut = "execution(* com.green.eats..*(..))", throwing = "ex")
+    // 포인트컷: application 패키지 하위만 적용
+    // constants, entity 등 record/final 클래스는 CGLIB 프록시 불가 → 제외
+    @AfterThrowing(pointcut = "execution(* com.green.eats..application..*(..))", throwing = "ex")
     public void logException(JoinPoint joinPoint, Exception ex) {
         log.error("[Exception] {}.{} - {}",
                 joinPoint.getSignature().getDeclaringTypeName(), // 클래스명
