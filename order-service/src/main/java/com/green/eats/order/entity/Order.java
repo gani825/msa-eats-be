@@ -1,44 +1,44 @@
 package com.green.eats.order.entity;
 
+import com.green.eats.order.enumcode.EnumOrderStatus;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "orders")
-@Getter @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "orders") // 'order'는 SQL 예약어이므로 테이블명 명시
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 기본 생성자 필요, 외부 직접 생성 방지
 public class Order {
     @Id @Tsid
     private Long id;
 
-    // user_cache 테이블의 userId를 참조 (FK 대신 값으로만 참조)
+    // user_cache 테이블의 userId 참조 (FK 제약 없음, Kafka로 동기화된 캐시)
     @Column(nullable = false)
     private Long userId;
 
-    private Long totalAmount;
+    private Integer totalAmount; // 총 결제 금액
 
-    @Enumerated(EnumType.STRING)
-    private OrderStatus status;
+    @Column(length = 2, nullable = false)
+    private EnumOrderStatus status; // 내부 enum → 별도 EnumOrderStatus로 분리
 
-    // 주문 상세 항목 목록 (cascade: Order 저장 시 OrderItem도 함께 저장)
+    // cascade = ALL: Order 저장/삭제 시 OrderItem도 함께 처리
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
     private List<OrderItem> items = new ArrayList<>();
 
     @Builder
-    public Order(Long userId, Long totalAmount) {
+    public Order(Long userId, Integer totalAmount) {
         this.userId = userId;
         this.totalAmount = totalAmount;
-        this.status = OrderStatus.PENDING; // 주문 생성 시 기본 상태
+        this.status = EnumOrderStatus.COMPLETED; // PENDING → COMPLETED: 즉시 결제 완료 처리
     }
 
-    // 연관 관계 편의 메서드 - OrderItem에 Order를 세팅하고 리스트에 추가
+    // 연관 관계 편의 메서드: OrderItem 추가 시 양방향 관계 동시 설정
     public void addOrderItem(OrderItem item) {
         this.items.add(item);
         item.setOrder(this);
     }
-
-    // 주문 상태 Enum
-    public enum OrderStatus { PENDING, COMPLETED, CANCELLED }
 }

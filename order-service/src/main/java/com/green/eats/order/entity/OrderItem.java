@@ -1,6 +1,5 @@
 package com.green.eats.order.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.hypersistence.utils.hibernate.id.Tsid;
 import jakarta.persistence.*;
 import lombok.Builder;
@@ -15,18 +14,17 @@ public class OrderItem {
     @Tsid
     private Long id;
 
-    // Order ↔ OrderItem 순환 참조 방지 - JSON 직렬화 시 order 필드 제외
-    @JsonIgnore
+    // 지연 로딩 - 실제 Order 데이터가 필요할 때만 쿼리 실행
+    // @JsonIgnore 제거: 직접 직렬화 대신 DTO(OrderGetDetailRes)로 변환해서 반환하는 방식으로 변경
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
 
     private Long menuId; // 주문한 메뉴 ID
     private Integer quantity; // 수량
-    private Long price; // 단가
-
+    private Integer price; // 단가
     @Builder
-    public OrderItem(Long menuId, Integer quantity, Long price) {
+    public OrderItem(Long menuId, Integer quantity, Integer price) {
         this.menuId = menuId;
         this.quantity = quantity;
         this.price = price;
