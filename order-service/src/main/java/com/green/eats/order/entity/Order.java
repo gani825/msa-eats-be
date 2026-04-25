@@ -22,8 +22,9 @@ public class Order {
 
     private Integer totalAmount; // 총 결제 금액
 
-    @Column(length = 2, nullable = false)
-    private EnumOrderStatus status; // 내부 enum → 별도 EnumOrderStatus로 분리
+    @Column(length = 20, nullable = false) // 2 → 20 으로 변경 (COMPLETED = 9글자)
+    @Enumerated(EnumType.STRING) // DB에 문자열로 저장 ("PENDING", "COMPLETED")
+    private EnumOrderStatus status;
 
     // cascade = ALL: Order 저장/삭제 시 OrderItem도 함께 처리
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
