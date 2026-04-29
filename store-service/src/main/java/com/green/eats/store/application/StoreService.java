@@ -3,10 +3,12 @@ package com.green.eats.store.application;
 import com.green.eats.common.model.MenuGetClientRes;
 import com.green.eats.store.application.model.MenuGetRes;
 import com.green.eats.store.application.model.MenuPostReq;
+import com.green.eats.store.configuration.constants.ConstRedisCache;
 import com.green.eats.store.entity.Menu;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ public class StoreService {
     }
 
     // 전체 메뉴 목록 조회
+    @Cacheable(cacheNames = ConstRedisCache.menuList)
     public List<MenuGetRes> getAllMenus() {
         List<Menu> menuList = menuRepository.findAll();
 

@@ -34,7 +34,7 @@ public class UserService {
         newUser.setName(req.getName());
         newUser.setAddress(req.getAddress());
         newUser.setEnumUserRole(req.getUserRole()); // 역할 설정
-        newUser.setIsDel(false);                    // 초기 탈퇴 여부 = 정상
+        newUser.setIsDel(false); // 초기 탈퇴 여부 = 정상
 
         userRepository.save(newUser);
 

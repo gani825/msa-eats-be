@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import com.green.eats.common.redis.RedisService;
 
 @Slf4j
 @Component
@@ -22,6 +23,7 @@ public class JwtTokenManager { // 인증 처리 총괄
     private final ConstJwt constJwt;
     private final MyCookieUtils myCookieUtils;
     private final JwtTokenProvider jwtTokenProvider;
+    private final RedisService redisService;
 
     // 로그인 성공 시 AT + RT 동시 발급
     public void issue(HttpServletResponse res, JwtUser jwtUser) {
@@ -36,9 +38,16 @@ public class JwtTokenManager { // 인증 처리 총괄
     }
 
     // RT 생성 후 쿠키에 담기
-    public void setRefreshTokenInCookie(HttpServletResponse res, JwtUser jwtUser) {
+    public String setRefreshTokenInCookie(HttpServletResponse res, JwtUser jwtUser) {
         String refreshToken = jwtTokenProvider.generateRefreshToken(jwtUser);
+
+        // Redis에 RT 저장 (key: RT-{userId}, value: refreshToken, TTL: 만료시간)
+        // 나중에 RT 검증 시 Redis에서 꺼내 비교하기 위함
+        String redisKey = String.format("RT-%d", jwtUser.getSignedUserId());
+        redisService.save(redisKey, refreshToken, constJwt.refreshTokenCookieValiditySeconds());
+
         setRefreshTokenInCookie(res, refreshToken);
+        return refreshToken;
     }
 
     // AT를 쿠키에 담는다.

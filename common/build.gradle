@@ -7,6 +7,8 @@ dependencies {
     compileOnly 'org.springframework.boot:spring-boot-starter-security'
     compileOnly 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis' // redis 의존성
+
     // Spring Boot 4.0.x에서 spring-boot-starter-aop가 인식되지 않아
     // 내부 핵심 라이브러리인 spring-aop와 aspectjweaver를 직접 추가
     api 'org.springframework:spring-aop'

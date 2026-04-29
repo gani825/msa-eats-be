@@ -29,7 +29,7 @@ public class RedisConfiguration {
         template.setKeySerializer(RedisSerializer.string());
 
         // 2. Value는 최신화된 JSON 직렬화 (GenericJackson...의 대체제)
-        // 별도의 클래스 지정 없이도 다형성을 안전하게 지원합니다.
+        // 별도의 클래스 지정 없이도 다형성을 안전하게 지원.
         template.setValueSerializer(RedisSerializer.json());
 
         // Hash 구조도 동일하게 설정
